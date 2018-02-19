@@ -1,8 +1,10 @@
 @import url('https://cdn.rawgit.com/FirefoxUX/design-tokens/master/photon-colors/photon-colors.css');
+@import 'typography.css';
 
 html {
   box-sizing: border-box;
   font-size: 16px;
+  background-color: var(--grey-10);
 }
 
 *,
@@ -12,11 +14,36 @@ html {
 }
 
 body {
-  display: flex;
-  max-width: 100.5em;
+  max-width: 100em;
   margin: 0 auto;
   color: var(--grey-90);
-  background-color: var(--grey-10);
   font-family: -apple-system, BlinkMacSystemFont, 'segoe ui', 'helvetica neue', helvetica, ubuntu, roboto, noto, arial, sans-serif;
   font-size: 1em;
+}
+
+main {
+  max-width: 40em;
+  margin:4em;
+}
+
+
+p {
+  margin-bottom: 0.250em
+}
+
+
+.mb-1 {
+  margin-bottom: 0.250em;
+}
+
+.mb-2 {
+  margin-bottom: 0.5em;
+}
+
+.mb-3 {
+  margin-bottom: 0.75em;
+}
+
+.mb-4 {
+  margin-bottom: 1em;
 }

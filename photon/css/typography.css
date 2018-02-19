@@ -1,49 +1,52 @@
-.captation-10 {
-  font-size: 0.756em
-}
-
-.captation-20 {
-  font-size: 0.87em;
-}
-
-.captation-30 {
-  font-size: 1em;
-}
-
-.body-10 {
-  font-size: 0.87em;
+.small {
+  font-size:0.694em;
   font-weight: 400;
 }
 
-.body-20 {
+.captation {
+  font-size: 0.833em;
+  font-weight: 400;
+}
+
+.body {
   font-size: 1em;
-  line-height: 1.25;
+  font-weight: 400;
 }
 
-.body-30 {
-  font-size:1.15em
+.subheading {
+  font-size: 1.2em;
+  font-weight: 400;
 }
 
-.title-10 {
-  font-size:1.15em
+.title {
+  font-size: 1.44em;
+  font-weight: 400;
+  line-height: 1.3;
 }
 
-.title-20 {
-  font-size: 1.322em;
+.headline {
+  font-size: 2.074em;
+  font-weight: 300;
+  line-height: 1.3;
 }
 
-.title-30 {
-  
+.display {
+  font-size: 2.488em;
+  font-weight: 300;
+  line-height: 1.4;
 }
 
-.display-20 {
-  font-size: 36px;
-  line-height: 1.5;
+.mega {
+  font-size: 2.986em;
+  font-weight: 200;
+  line-height: 1.4;
 }
 
-h2 {font-size: 1.521em;}
 
-h3 {font-size: }
+.emphasis {
+  font-weight: 700;
+}
 
-h4 {font-size: 1.15em;} 
-
+.subdued {
+  color: var(--grey-50);
+}
