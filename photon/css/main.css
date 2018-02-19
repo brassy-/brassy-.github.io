@@ -18,6 +18,5 @@ body {
   color: var(--grey-90);
   background-color: var(--grey-10);
   font-family: -apple-system, BlinkMacSystemFont, 'segoe ui', 'helvetica neue', helvetica, ubuntu, roboto, noto, arial, sans-serif;
-  font-size: 1rem;
-  line-height: 1.5rem;
+  font-size: 1em;
 }
