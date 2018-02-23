@@ -49,3 +49,8 @@
 .subdued {
   color: var(--grey-50);
 }
+
+
+p + p {
+  margin-top: 0.5em;
+}
