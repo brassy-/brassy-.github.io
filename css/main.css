@@ -9,6 +9,8 @@ html {
   -moz-osx-font-smoothing: grayscale;
   border-bottom: 1em solid var(--purple-50);
   height: 100vh;
+  margin-left: 0.25em;
+  margin-right: 0.25em;
 }
 
 *,
