@@ -19,8 +19,8 @@ body {
   max-width: 100em;
   margin: 0 auto;
   color: var(--grey-90);
-  font: message-box;
   font-family: -moz-use-system-font, system-ui, -apple-system,BlinkMacSystemFont,"Segoe UI",Oxygen,Ubuntu,Cantarell,Roboto,"Fira Sans","Open Sans","Helvetica Neue",sans-serif;
+  font: message-box;
   font-size: 1em;
 }
 
