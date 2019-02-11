@@ -72,6 +72,7 @@ design/images/bcePKmVmXbsVk9ibg3XenOvIy8.jpg
 design/images/Zl6nluFj0xsjykWGgNIUX4V5bgY.png
 design/images/VcQXapveI6qsNDPvunugweRAok8.png
 design/images/UK4AbisKfYZgtUCeU6eNEJrVY.jpg
+design/images/HJCWdDDpEjZ5MLNdvRet2ap5K10.png
 design/images/9TN0dkjzKBciycjom73a85SYD2U.png
 design/images/7ePu2BNCH93WsOr2QIMoVBERk.png
 code/style.css
