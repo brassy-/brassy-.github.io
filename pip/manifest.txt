@@ -13,7 +13,6 @@ node_modules/@framer/maxsteitle.resizable-window/design/document.json
 node_modules/@framer/maxsteitle.resizable-window/code/headerStyles.tsx
 node_modules/@framer/maxsteitle.resizable-window/code/canvas.tsx
 node_modules/@framer/maxsteitle.resizable-window/code/ResizableWindow.tsx
-node_modules/@framer/maxsteitle.resizable-window/code/Examples.tsx
 node_modules/@framer/maxsteitle.resizable-window/code/App.tsx
 node_modules/@framer/maxsteitle.resizable-window/README.md
 node_modules/@framer/krijn.video-player/tsconfig.json
@@ -66,9 +65,10 @@ images/cursors/touch.png
 images/cursors/touch-active@2x.png
 images/cursors/touch-active.png
 design/images/uUW4QNoP4cZcc2Has5SlXQ3T6s.png
-design/images/Zl6nluFj0xsjykWGgNIUX4V5bgY.png
-design/images/BIC00LED1xy4px1iQu7SscYlVU.png
-design/images/5BnNAdCEoWGMCTD0kkT9XVfp8.png
+design/images/bcePKmVmXbsVk9ibg3XenOvIy8.jpg
+design/images/VcQXapveI6qsNDPvunugweRAok8.png
+design/images/HJCWdDDpEjZ5MLNdvRet2ap5K10.png
+design/images/9TN0dkjzKBciycjom73a85SYD2U.png
 code/style.css
 build/style.css
 build/standalone.js
