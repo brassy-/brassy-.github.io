@@ -19,8 +19,8 @@ node_modules/@framer/krijn.video-player/tsconfig.json
 node_modules/@framer/krijn.video-player/package.json
 node_modules/@framer/krijn.video-player/metadata/icon.png
 node_modules/@framer/krijn.video-player/metadata/artwork.png
+node_modules/@framer/krijn.video-player/dist/index.js
 node_modules/@framer/krijn.video-player/design/document.json
-node_modules/@framer/krijn.video-player/design/assets/Gradients.mp4
 node_modules/@framer/krijn.video-player/code/canvas.tsx
 node_modules/@framer/krijn.video-player/code/Video.tsx
 node_modules/@framer/krijn.video-player/code/App.tsx
