@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Window – Feedback Prototype</title>
+<style>
+/* ── Design tokens from Figma ── */
+:root {
+  --font: -apple-system, "SF Pro Text", "SF Pro Display", BlinkMacSystemFont, sans-serif;
+
+  /* Colors */
+  --color-violet-0:   #f4f0ff;
+  --color-violet-10:  #ddcfff;
+  --color-violet-70:  #623ac3;
+  --color-violet-80:  #4e2e9d;
+  --color-violet-90:  #3b2279;
+  --color-purple-90:  #521568;
+  --brand-dark-purple:#210340;
+  --text-color:       #15141a;
+  --text-deemph:      rgba(21,20,26,0.69);
+  --text-muted:       #5b5b66;
+  --icon-color:       #5b5b66;
+  --blue:             #0060df;
+  --blue-hover:       #0050bf;
+
+  /* Smart Bar */
+  --sw-bg:            rgba(255,255,255,0.80);
+  --sw-input-bg:      rgba(255,255,255,0.80);
+
+  /* Spacing */
+  --sp-xxs: 2px;
+  --sp-xs:  3px;
+  --sp-s:   7px;
+  --sp-m:   10px;
+  --sp-l:   14px;
+  --sp-xl:  21px;
+
+  /* Radius */
+  --r-m:    8px;
+  --r-l:    16px;
+  --r-pill: 9999px;
+
+  /* Shadows */
+  --shadow-tab:    0 1px 2px rgba(59,34,121,0.20), 0 3px 16px rgba(59,34,121,0.12);
+  --shadow-input:  0 1px 1px rgba(40,25,83,0.02), 0 1px 2px rgba(120,68,240,0.05);
+  --shadow-bubble: 0 0.25px 0.75px rgba(13,0,16,0.15), 0 2px 6px rgba(95,25,185,0.20);
+  --shadow-modal:  0 4px 32px rgba(58,57,68,0.12);
+  --shadow-focus:  0 0 24px rgba(158,122,255,0.30);
+
+  /* Chrome */
+  --chrome-bg:    #f0f0f4;
+  --chrome-lav:   #e8e3f5;
+  --sw-width:     360px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font);
+  background: #cdcdd4;
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══════════════════════════════════
+   BROWSER SHELL
+══════════════════════════════════ */
+.browser {
+  width: 1060px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 28px 80px rgba(0,0,0,0.28), 0 2px 8px rgba(0,0,0,0.12);
+  display: flex;
+  flex-direction: column;
+  background: var(--chrome-bg);
+}
+
+/* Split chrome rows: left=grey, right=lavender */
+.chrome-row { display: flex; flex-shrink: 0; }
+.chrome-l { flex: 1; min-width: 0; background: var(--chrome-bg); display: flex; align-items: center; }
+.chrome-r { width: var(--sw-width); flex-shrink: 0; background: var(--chrome-lav); display: flex; align-items: center; }
+
+/* ── Tab strip ── */
+.tab-strip-l {
+  display: flex; align-items: center; height: 40px; padding: 0 8px; gap: 4px; width: 100%;
+}
+.traffic-lights { display: flex; gap: 6px; align-items: center; padding: 0 8px 0 8px; flex-shrink: 0; }
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot-r { background: #ff5f57; } .dot-y { background: #febc2e; } .dot-g { background: #28c840; }
+
+.tabs { display: flex; gap: 2px; align-items: flex-end; padding-bottom: 0; margin-top: 4px; }
+.tab {
+  height: 32px; display: flex; align-items: center; gap: 6px;
+  padding: 0 var(--sp-xs) 0 var(--sp-s); border-radius: var(--r-m) var(--r-m) 0 0;
+  font-size: 11px; color: var(--text-deemph);
+  white-space: nowrap; overflow: hidden; max-width: 190px; cursor: pointer;
+  position: relative;
+}
+.tab.active {
+  background: linear-gradient(180deg, #fff 0%, rgba(255,255,255,0.35) 100%);
+  border: 0.5px solid rgba(255,255,255,0.9);
+  border-bottom: none;
+  box-shadow: var(--shadow-tab);
+  color: var(--text-color);
+  height: 34px;
+}
+.tab-fav { width: 14px; height: 14px; border-radius: 3px; flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.tab-fav img { width: 100%; height: 100%; object-fit: contain; }
+.tab-title { overflow: hidden; text-overflow: ellipsis; flex: 1; font-size: 11px; }
+.tab-close { font-size: 9px; color: rgba(21,20,26,0.3); flex-shrink: 0; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+.tab-close:hover { background: rgba(21,20,26,0.08); }
+.tab-new { width: 26px; height: 26px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text-deemph); cursor: pointer; }
+
+.tab-strip-r { justify-content: flex-end; padding: 0 8px; gap: 4px; }
+.chrome-icon-btn { width: 28px; height: 28px; border-radius: 7px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.chrome-icon-btn:hover { background: rgba(78,46,157,0.08); }
+.chrome-icon-btn svg { width: 16px; height: 16px; color: rgba(60,40,100,0.6); }
+
+/* Firefox SW logo icon */
+.sw-mode-btn {
+  width: 32px; height: 32px; border-radius: var(--r-m);
+  background: var(--color-violet-0);
+  box-shadow: inset 0 0 4px rgba(139,92,255,0.20);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+/* ── Toolbar ── */
+.toolbar-l {
+  display: flex; align-items: center; gap: 2px; padding: 3px 6px 3px 8px; height: 34px; width: 100%;
+}
+.nav-btn { width: 28px; height: 28px; border-radius: var(--r-m); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.nav-btn:hover { background: rgba(21,20,26,0.07); }
+.nav-btn svg { width: 16px; height: 16px; color: rgba(21,20,26,0.55); }
+
+.address-bar {
+  flex: 1; height: 26px;
+  background: var(--sw-input-bg);
+  border-radius: var(--r-pill);
+  display: flex; align-items: center; padding: 0 6px; gap: 3px;
+  font-size: 12px; color: var(--text-deemph);
+  box-shadow: var(--shadow-input);
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.addr-icons { display: flex; align-items: center; flex-shrink: 0; }
+.addr-icon { width: 24px; height: 24px; border-radius: var(--r-m); display: flex; align-items: center; justify-content: center; }
+.addr-icon svg { width: 14px; height: 14px; color: rgba(21,20,26,0.45); }
+.addr-text { flex: 1; overflow: hidden; text-overflow: ellipsis; font-size: 12px; color: var(--text-deemph); }
+.addr-right { display: flex; align-items: center; flex-shrink: 0; }
+
+.toolbar-r { padding: 3px 8px; gap: 2px; }
+.tb-icon { width: 28px; height: 28px; border-radius: var(--r-m); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.tb-icon:hover { background: rgba(78,46,157,0.08); }
+.tb-icon svg { width: 16px; height: 16px; color: rgba(60,40,100,0.60); }
+.ask-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 7px; border: 0.5px solid var(--color-violet-80);
+  border-radius: 11px; font-size: 13.5px; font-weight: 590;
+  color: var(--color-violet-80); cursor: pointer;
+  letter-spacing: -0.01em; flex-shrink: 0; margin-left: 3px;
+}
+
+/* ══════════════════════════════════
+   MAIN CONTENT
+══════════════════════════════════ */
+.main-area { display: flex; flex: 1; }
+
+/* Webpage slot */
+.webpage {
+  flex: 1; min-width: 0;
+  background: #fff;
+  border-top: 0.8px solid var(--color-violet-10);
+  border-right: 0.5px solid rgba(221,207,255,0.6);
+  border-top-left-radius: 8px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  margin: 0 0 0 8px;
+  border-radius: 8px 8px 0 0;
+  position: relative;
+}
+.nyt-topbar {
+  display: flex; align-items: center; padding: 8px 20px; gap: 12px;
+  border-bottom: 1px solid #e5e3df; flex-shrink: 0;
+}
+.nyt-logo { font-size: 14px; font-weight: 700; color: #121212; font-family: Georgia,serif; display: flex; align-items: center; gap: 4px; }
+.nyt-search { flex: 1; height: 26px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 11px; color: #999; gap: 4px; }
+.btn-login { font-size: 11px; color: #333; font-weight: 500; cursor: pointer; padding: 3px 8px; white-space: nowrap; }
+.btn-create { font-size: 11px; color: #fff; font-weight: 600; background: #d0011b; padding: 5px 10px; border-radius: 3px; cursor: pointer; white-space: nowrap; }
+.nyt-icon-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 1px solid #ddd; border-radius: 3px; font-size: 11px; color: #888; cursor: pointer; }
+
+.nyt-nav { display: flex; gap: 16px; padding: 6px 20px; border-bottom: 1px solid #e5e3df; font-size: 11px; color: #333; font-weight: 500; flex-shrink: 0; }
+.nyt-nav span { cursor: pointer; }
+.nyt-nav span:hover { text-decoration: underline; }
+
+.nyt-content { display: flex; flex: 1; overflow: hidden; padding: 16px 20px; gap: 18px; }
+.recipe-left { width: 150px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+.recipe-title { font-family: Georgia,serif; font-size: 22px; font-weight: 700; color: #121212; line-height: 1.15; margin-bottom: 3px; }
+.recipe-byline { font-size: 10px; color: #333; } .recipe-byline a { color: #000; text-decoration: underline; }
+.recipe-date { font-size: 10px; color: #666; }
+.recipe-divider { border: none; border-top: 1px solid #e0e0e0; margin: 2px 0; }
+.meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.meta-item label { display: block; font-size: 9px; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
+.meta-item span { font-size: 10px; color: #222; font-weight: 500; }
+.recipe-rating { font-size: 10px; color: #333; }
+.recipe-rating-stars { color: #333; }
+.recipe-comments { font-size: 10px; color: #555; text-decoration: underline; cursor: pointer; }
+.recipe-actions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+.action-chip { display: flex; align-items: center; gap: 3px; font-size: 10px; color: #555; border: 1px solid #d8d8d8; border-radius: 20px; padding: 3px 8px; cursor: pointer; background: #fafafa; }
+.action-chip.save { background: #f5ede6; border-color: #ddc5ad; color: #8b5e3c; }
+.account-prompt { margin-top: auto; padding: 10px 12px; background: #f8f8f8; border-radius: 5px; text-align: center; font-size: 10px; color: #555; border: 1px solid #ebebeb; }
+.account-prompt strong { display: block; font-size: 11px; color: #222; margin-bottom: 2px; }
+
+.recipe-right { flex: 1; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+.recipe-img {
+  width: 100%; height: 220px; border-radius: 3px; flex-shrink: 0;
+  background: linear-gradient(135deg, #c8906a 0%, #9e5e42 50%, #7a3c2a 100%);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.recipe-img-emoji { font-size: 52px; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.30)); }
+.recipe-img-credit { position: absolute; bottom: 5px; right: 7px; font-size: 8px; color: rgba(255,255,255,0.60); font-style: italic; }
+.recipe-body { font-size: 11px; color: #444; line-height: 1.7; }
+.recipe-body a { color: #000; text-decoration: underline; }
+
+/* ── Smart Bar (sidebar) ── */
+.smart-bar {
+  width: var(--sw-width);
+  flex-shrink: 0;
+  background: transparent;
+  display: flex; flex-direction: column;
+  padding: 4px 4px 14px 4px;
+  gap: var(--sp-xl);
+  position: relative;
+  align-items: flex-end;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+/* Radial gradient background from Figma */
+.smart-bar::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% 45%, rgba(221,207,255,0.20) 0%, rgba(255,255,255,0.80) 100%),
+    linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 65%);
+  pointer-events: none;
+}
+
+/* Circle gradient glow from Figma (top left large circle) */
+.smart-bar::after {
+  content: '';
+  position: absolute;
+  width: 500px; height: 500px;
+  left: -130px; top: -250px;
+  background: radial-gradient(circle, rgba(221,207,255,0.45) 0%, rgba(255,255,255,0) 70%);
+  pointer-events: none;
+}
+
+/* Top expand icon */
+.sw-top-actions {
+  position: absolute; top: 4px; left: 4px; right: 4px;
+  display: flex; align-items: center; justify-content: flex-start;
+  padding: 4px;
+  z-index: 2;
+}
+.sw-expand-btn {
+  width: 32px; height: 32px; border-radius: var(--r-pill);
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 1px 1px rgba(40,25,83,0.02), 0 1px 2px rgba(120,68,240,0.05);
+  cursor: pointer; flex-shrink: 0;
+}
+.sw-expand-btn svg { width: 16px; height: 16px; color: var(--icon-color); }
+
+.sw-messages {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 44px 10px 0;
+  overflow-y: auto; scrollbar-width: none;
+  position: relative; z-index: 1;
+  width: 100%;
+  align-items: flex-start;
+}
+.sw-messages::-webkit-scrollbar { display: none; }
+
+/* User bubble */
+.user-prompt { display: flex; justify-content: flex-end; width: 100%; padding: 0 2px; }
+.user-bubble {
+  background: var(--sw-bg);
+  border-radius: 12px;
+  padding: var(--sp-l);
+  font-size: 15px; color: var(--color-purple-90);
+  max-width: 92%; line-height: 1.4;
+  box-shadow: var(--shadow-bubble);
+  position: relative;
+}
+.user-bubble::after {
+  content: '';
+  position: absolute; inset: 0; border-radius: inherit;
+  box-shadow: inset 0 0 20px rgba(198,113,235,0.15);
+  pointer-events: none;
+}
+
+/* AI response */
+.ai-output { display: flex; flex-direction: column; gap: 12px; width: 100%; padding: 0 2px; }
+.ai-heading { font-size: 13px; font-weight: 590; color: var(--brand-dark-purple); line-height: 1.3; }
+.ai-body { font-size: 15px; color: var(--brand-dark-purple); line-height: 1.6; }
+.ai-body em { font-style: italic; }
+.ai-body strong { font-weight: 590; }
+.ai-body code { background: rgba(21,20,26,0.07); padding: 1px 4px; border-radius: 4px; font-size: 13px; font-family: ui-monospace, monospace; }
+.ai-body a { color: var(--color-violet-70); text-decoration: underline; }
+.ai-list { padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 1px; }
+.ai-list li { font-size: 15px; color: var(--brand-dark-purple); line-height: 1.6; padding-left: 16px; position: relative; }
+.ai-list li::before { content: '·'; position: absolute; left: 5px; color: var(--text-deemph); font-size: 18px; line-height: 1.2; }
+
+/* Prompt actions */
+.prompt-actions { display: flex; gap: 8px; align-items: center; width: 100%; }
+.pa-btn {
+  width: 32px; height: 32px; border-radius: var(--r-m);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--icon-color); cursor: pointer;
+  border: none; background: none; transition: background 0.12s;
+}
+.pa-btn:hover { background: rgba(78,46,157,0.08); }
+.pa-btn.thumb-up:hover { background: rgba(0,128,64,0.09); color: #008040; }
+.pa-btn.thumb-down:hover { background: rgba(215,0,34,0.08); color: #d70022; }
+.pa-btn svg { width: 20px; height: 20px; }
+.pa-mem-btn {
+  height: 24px; padding: 0 4px;
+  border-radius: var(--r-m); border: 1px solid transparent;
+  display: flex; align-items: center; gap: 6px; cursor: pointer; background: none;
+}
+.pa-mem-btn:hover { background: rgba(78,46,157,0.08); border-color: rgba(78,46,157,0.12); }
+.pa-mem-btn svg { width: 16px; height: 16px; color: var(--icon-color); }
+
+/* Prompt input */
+.prompt-input-wrap {
+  width: 100%;
+  background: var(--sw-input-bg);
+  border: 1.5px solid #321bfd;
+  border-radius: var(--r-l);
+  padding: var(--sp-l) var(--sp-l) var(--sp-m);
+  display: flex; flex-direction: column; gap: 14px;
+  box-shadow: var(--shadow-focus);
+  position: relative; z-index: 1;
+}
+.input-text {
+  font-size: 16.4px; color: var(--text-deemph);
+  padding: 0 var(--sp-s); line-height: 1.3;
+  display: flex; align-items: center; gap: 6px;
+}
+.input-cursor {
+  display: inline-block; width: 2px; height: 18px;
+  background: var(--text-color); opacity: 0.5; margin-left: 1px;
+  animation: blink 1.1s step-start infinite;
+  vertical-align: middle;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.input-controls {
+  display: flex; align-items: center; justify-content: space-between; padding: 0 0;
+}
+.input-left-actions { display: flex; align-items: center; gap: 0; }
+.input-action-btn {
+  width: 28px; height: 28px; border-radius: var(--r-m);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: none; background: none; color: var(--icon-color);
+}
+.input-action-btn:hover { background: rgba(78,46,157,0.08); }
+.input-action-btn svg { width: 16px; height: 16px; }
+.submit-btn {
+  width: 32px; height: 32px; background: var(--color-violet-80); border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.submit-btn svg { width: 16px; height: 16px; color: #fff; }
+
+/* ══════════════════════════════════
+   OVERLAY & MODALS
+══════════════════════════════════ */
+.overlay {
+  position: absolute; inset: 0;
+  background: rgba(21,20,26,0.22);
+  display: none; align-items: flex-start; justify-content: flex-end;
+  padding: 56px 8px 0 8px;
+  z-index: 50;
+}
+.overlay.active { display: flex; }
+
+/* Modal matches Figma: white, 12px radius, 24px padding, shadow */
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: var(--shadow-modal);
+  width: 340px;
+  padding: 24px;
+  display: none; flex-direction: column; gap: 24px;
+  animation: modalIn 0.15s cubic-bezier(0.34,1.2,0.64,1);
+}
+.modal.active { display: flex; }
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+.modal-title {
+  font-size: 17px; font-weight: 590; color: var(--text-color);
+  letter-spacing: -0.01em;
+}
+
+.modal-content { display: flex; flex-direction: column; gap: 12px; }
+
+.field-label {
+  font-size: 15px; font-weight: 400; color: var(--text-color);
+  margin-bottom: 4px; display: block;
+}
+
+.text-input {
+  width: 100%;
+  border: 1px solid #8f8f9d;
+  border-radius: var(--r-m);
+  background: #fff;
+  padding: 8px 12px;
+  font-size: 15px; font-family: var(--font);
+  color: var(--text-color); resize: none;
+  height: 36px; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  display: block;
+}
+.text-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,96,223,0.15); }
+.text-input::placeholder { color: var(--text-deemph); }
+
+.select-wrapper { position: relative; display: inline-block; }
+.modal-select {
+  appearance: none; -webkit-appearance: none;
+  background: rgba(21,20,26,0.07);
+  border: 1px solid transparent;
+  border-radius: var(--r-m);
+  padding: 6px 32px 6px 16px;
+  font-size: 15px; font-weight: 590; font-family: var(--font);
+  color: var(--text-color); cursor: pointer; outline: none;
+  height: 32px; min-width: 200px;
+  transition: border-color 0.15s;
+}
+.modal-select:focus { border-color: var(--blue); }
+.select-chevron {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  pointer-events: none; width: 12px; height: 12px;
+  color: var(--text-deemph);
+}
+.select-chevron svg { width: 12px; height: 7px; }
+
+.modal-disclosure {
+  font-size: 13px; color: var(--text-muted); line-height: 1.55;
+}
+.modal-disclosure a { color: var(--blue); text-decoration: none; }
+.modal-disclosure a:hover { text-decoration: underline; }
+
+/* Footer – three buttons right-aligned, 8px gap */
+.modal-footer { display: flex; gap: 8px; align-items: center; justify-content: flex-end; }
+
+/* Figma moz-button mapping → styled HTML buttons */
+.btn {
+  height: 32px; padding: 0 16px;
+  border-radius: var(--r-m);
+  font-size: 13px; font-family: var(--font); font-weight: 500;
+  cursor: pointer; border: 1px solid transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background 0.12s, border-color 0.12s;
+  white-space: nowrap;
+}
+.btn-ghost {
+  background: rgba(21,20,26,0.07);
+  color: var(--text-color);
+  border-color: transparent;
+}
+.btn-ghost:hover { background: rgba(21,20,26,0.12); }
+
+.btn-primary {
+  background: var(--blue);
+  color: #fff;
+  border-color: transparent;
+}
+.btn-primary:hover { background: var(--blue-hover); }
+
+/* ══════════════════════════════════
+   PREVIEW PANEL
+══════════════════════════════════ */
+.preview-panel {
+  position: absolute; inset: 0;
+  background: rgba(21,20,26,0.35);
+  display: none; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.preview-panel.active { display: flex; }
+.preview-box {
+  background: #fff; border-radius: 12px; width: 320px;
+  max-height: 360px; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+  display: flex; flex-direction: column;
+}
+.preview-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 16px 12px; border-bottom: 1px solid rgba(21,20,26,0.08);
+  flex-shrink: 0;
+}
+.preview-header h3 { font-size: 15px; font-weight: 590; color: var(--text-color); }
+.preview-close { background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-deemph); padding: 2px 5px; border-radius: 5px; }
+.preview-close:hover { background: rgba(21,20,26,0.07); }
+.preview-content { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.preview-entry { font-size: 12px; color: #444; line-height: 1.6; }
+.preview-role { font-weight: 590; font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-deemph); margin-bottom: 3px; }
+.preview-div { height: 1px; background: rgba(21,20,26,0.08); }
+.preview-note { font-size: 11px; color: var(--text-deemph); line-height: 1.5; font-style: italic; }
+
+/* Toast */
+.toast {
+  position: absolute; bottom: 64px; left: 50%; transform: translateX(-50%);
+  background: var(--text-color); color: #fff; font-size: 12.5px; font-weight: 500;
+  padding: 7px 16px; border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.22);
+  display: none; z-index: 200; white-space: nowrap;
+}
+.toast.active { display: block; animation: toastIn 0.18s ease; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(4px); } to { opacity: 1; transform: translateX(-50%); } }
+
+/* Hint */
+.proto-hint {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: rgba(21,20,26,0.78); color: rgba(255,255,255,0.9);
+  font-size: 11.5px; padding: 6px 16px; border-radius: 20px;
+  pointer-events: none; font-family: var(--font);
+  -webkit-font-smoothing: antialiased; white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<div class="browser">
+
+  <!-- ── Tab strip ── -->
+  <div class="chrome-row" style="height:40px;">
+    <div class="chrome-l">
+      <div class="tab-strip-l">
+        <div class="traffic-lights">
+          <div class="dot dot-r"></div>
+          <div class="dot dot-y"></div>
+          <div class="dot dot-g"></div>
+        </div>
+        <div class="tabs">
+          <div class="tab active">
+            <div class="tab-fav">
+              <!-- NYT Cooking favicon approximation -->
+              <svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="7" fill="#d0011b"/><text x="8" y="11.5" text-anchor="middle" fill="white" font-size="8" font-family="Georgia">T</text></svg>
+            </div>
+            <span class="tab-title">Eggplant Adobo Recipe</span>
+            <div class="tab-close">✕</div>
+          </div>
+          <div class="tab">
+            <div class="tab-fav">
+              <svg viewBox="0 0 16 16" width="14" height="14"><rect width="16" height="16" rx="2" fill="#1a73e8"/><rect x="4" y="3" width="8" height="1.5" rx="0.5" fill="white"/><rect x="4" y="6" width="8" height="1.5" rx="0.5" fill="white"/><rect x="4" y="9" width="6" height="1.5" rx="0.5" fill="white"/></svg>
+            </div>
+            <span class="tab-title">Christmas Dinner planning</span>
+          </div>
+          <div class="tab-new">+</div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-r tab-strip-r">
+      <!-- three-dots menu icon -->
+      <div class="chrome-icon-btn">
+        <svg viewBox="0 0 16 16" fill="none"><circle cx="2" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="14" cy="8" r="1.3" fill="currentColor"/></svg>
+      </div>
+      <!-- Firefox Smart Window mode icon -->
+      <div class="sw-mode-btn">
+        <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+          <path d="M9 1C5 1 2 4 2 7.5S5 12 9 12s7-1.5 7-4.5S13 1 9 1Z" fill="url(#ff-g)"/>
+          <path d="M4 6c1-2.5 3-4 5-3.5" stroke="white" stroke-width="1" stroke-linecap="round" fill="none"/>
+          <defs><radialGradient id="ff-g" cx="50%" cy="30%"><stop offset="0%" stop-color="#FF9800"/><stop offset="100%" stop-color="#D44000"/></radialGradient></defs>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Toolbar ── -->
+  <div class="chrome-row" style="height:34px;">
+    <div class="chrome-l">
+      <div class="toolbar-l">
+        <!-- back -->
+        <div class="nav-btn">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <!-- forward -->
+        <div class="nav-btn" style="opacity:0.4">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <!-- reload -->
+        <div class="nav-btn">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M13 8A5 5 0 1 1 9 3.07" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 1v3H6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+        </div>
+        <!-- address bar -->
+        <div class="address-bar">
+          <div class="addr-icons">
+            <!-- shield -->
+            <div class="addr-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2L3 4v4c0 3 2.5 5 5 6 2.5-1 5-3 5-6V4L8 2Z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div>
+            <!-- lock -->
+            <div class="addr-icon"><svg viewBox="0 0 16 16" fill="none"><rect x="4" y="7" width="8" height="7" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg></div>
+            <!-- reader mode -->
+            <div class="addr-icon"><svg viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" stroke-width="1.2"/><line x1="5" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1"/><line x1="5" y1="8.5" x2="11" y2="8.5" stroke="currentColor" stroke-width="1"/><line x1="5" y1="11" x2="9" y2="11" stroke="currentColor" stroke-width="1"/></svg></div>
+          </div>
+          <span class="addr-text">https://cooking.nytimes.com/recipes/1024399-eggplant-adobo</span>
+          <div class="addr-right">
+            <!-- bookmark -->
+            <div class="addr-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M4 2h8v12l-4-3-4 3V2Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg></div>
+            <!-- reader view -->
+            <div class="addr-icon"><svg viewBox="0 0 16 16" fill="none"><rect x="3" y="3" width="4" height="10" rx="1" stroke="currentColor" stroke-width="1.2"/><line x1="9" y1="6" x2="13" y2="6" stroke="currentColor" stroke-width="1"/><line x1="9" y1="9" x2="13" y2="9" stroke="currentColor" stroke-width="1"/><line x1="9" y1="12" x2="13" y2="12" stroke="currentColor" stroke-width="1"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chrome-r toolbar-r">
+      <!-- downloads -->
+      <div class="tb-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M8 2v8M5 7l3 3 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><line x1="3" y1="13" x2="13" y2="13" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+      <!-- account -->
+      <div class="tb-icon"><svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M2 14c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg></div>
+      <!-- extensions -->
+      <div class="tb-icon"><svg viewBox="0 0 16 16" fill="none"><path d="M10.5 3H13v2.5a1.5 1.5 0 0 1 0 3V11H10.5a1.5 1.5 0 0 0-3 0H5V8.5a1.5 1.5 0 0 1 0-3V3h5.5Z" stroke="currentColor" stroke-width="1.2" fill="none"/></svg></div>
+      <!-- overflow -->
+      <div class="tb-icon"><svg viewBox="0 0 16 16" fill="none"><circle cx="3" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="13" cy="8" r="1.3" fill="currentColor"/></svg></div>
+      <!-- Ask button -->
+      <div class="ask-btn">
+        Ask
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2h4v4M9 6V9.5M7.5 9.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Main content ── -->
+  <div class="main-area" style="min-height:570px;">
+
+    <!-- Webpage -->
+    <div class="webpage">
+      <div class="nyt-topbar">
+        <div class="nyt-icon-btn">≡</div>
+        <div class="nyt-logo">
+          <svg width="13" height="13" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#d0011b"/><text x="8" y="12" text-anchor="middle" fill="white" font-size="9" font-family="Georgia" font-weight="bold">T</text></svg>
+          Cooking
+        </div>
+        <div class="nyt-search">
+          <svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5" stroke="#bbb" stroke-width="1.5"/><path d="M11 11l3 3" stroke="#bbb" stroke-width="1.5" stroke-linecap="round"/></svg>
+          What would you like to cook?
+        </div>
+        <div class="btn-login">Log in</div>
+        <div class="btn-create">Create free account</div>
+      </div>
+      <div class="nyt-nav">
+        <span>What to Cook</span><span>Recipes</span><span>Ingredients</span><span>Occasions</span><span>About</span>
+      </div>
+      <div class="nyt-content">
+        <div class="recipe-left">
+          <div>
+            <div class="recipe-title">Eggplant Adobo</div>
+            <div class="recipe-byline">By <a href="#">Kay Chun</a></div>
+            <div class="recipe-date">Published Jan. 19, 2024</div>
+          </div>
+          <hr class="recipe-divider">
+          <div class="meta-grid">
+            <div class="meta-item"><label>Total Time</label><span>40 minutes</span></div>
+            <div class="meta-item"><label>Prep Time</label><span>10 minutes</span></div>
+            <div class="meta-item"><label>Cook Time</label><span>30 minutes</span></div>
+          </div>
+          <div class="recipe-rating">Rating &nbsp;5 <span class="recipe-rating-stars">★★★★★</span> (2,223)</div>
+          <div class="recipe-comments">Read 242 comments ↓</div>
+          <div class="recipe-actions">
+            <div class="action-chip save">🔖 Save</div>
+            <div class="action-chip">🎁 Give</div>
+            <div class="action-chip">↗</div>
+            <div class="action-chip">🖨</div>
+          </div>
+          <div class="account-prompt">
+            <strong>Create a free account, or log in.</strong>
+            Get limited access to our recipes and more with a New York Times account.
+          </div>
+        </div>
+        <div class="recipe-right">
+          <div class="recipe-img">
+            <div class="recipe-img-emoji">🍆</div>
+            <div class="recipe-img-credit">Julia Gartland for The New York Times. Food Stylist: Samantha Seneviratne.</div>
+          </div>
+          <div class="recipe-body">
+            This superpunchy, one-skillet vegetarian meal is inspired by <a href="#">chicken adobo</a>, a beloved Filipino dish. Here, eggplant cooks in rich, tangy adobo sauce — a blend of soy sauce, vinegar, black pepper and bay leaf — absorbing the savory flavors as it simmers. Coconut milk is added in some versions of the adobo, creating a rich, silky texture to balance out the sauce's tart notes. This recipe includes a shower of fragrant basil, which brings a fresh hit that lifts the dish. Serve the eggplant over rice to catch all of its flavorful drippings.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Smart Bar -->
+    <div class="smart-bar" id="smartBar">
+
+      <!-- Top expand button (FilledIcon from Figma) -->
+      <div class="sw-top-actions">
+        <div class="sw-expand-btn">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 3h4M3 3v4M13 3h-4M13 3v4M3 13h4M3 13v-4M13 13h-4M13 13v-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+
+      <div class="sw-messages">
+        <!-- User prompt bubble -->
+        <div class="user-prompt">
+          <div class="user-bubble">etsy lamps and rugs I looked at this month</div>
+        </div>
+
+        <!-- AI response -->
+        <div class="ai-output">
+          <p class="ai-heading">Example of section heading or callout in H2</p>
+          <p class="ai-body">Markdown lets you easily style text for emphasis. For example, you can make words <em>italicized</em> or <strong>bold</strong>, or even <strong><em>bold and italic for extra flair</em></strong>. You can also show inline code snippets like <code>print("Hello, world!")</code>.</p>
+          <div>
+            <p class="ai-body"><strong>Here's a quick unordered list and H3 title:</strong></p>
+            <ul class="ai-list">
+              <li>Markdown is <em>lightweight</em>.</li>
+              <li>It's <strong>readable</strong> even without <s style="color:var(--text-deemph)">rendering</s>.</li>
+              <li>You can include <a href="#">links</a>.</li>
+            </ul>
+          </div>
+
+          <!-- Prompt action buttons – icons from Figma spec -->
+          <div class="prompt-actions">
+            <!-- copy -->
+            <button class="pa-btn" title="Copy">
+              <svg viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M3 11V3h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg>
+            </button>
+            <!-- thumbs up – opens modal -->
+            <button class="pa-btn thumb-up" title="This was helpful" onclick="openModal('thumbup')">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M6 9V17H3V9h3ZM6 9l3-6.5a2 2 0 0 1 2 2v3h4.5a1 1 0 0 1 1 1.2l-1.5 6.5A1 1 0 0 1 14 16H6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <!-- thumbs down – opens modal -->
+            <button class="pa-btn thumb-down" title="Report an issue" onclick="openModal('thumbdown')">
+              <svg viewBox="0 0 20 20" fill="none"><path d="M14 11V3h3v8h-3ZM14 11l-3 6.5a2 2 0 0 1-2-2v-3H4.5a1 1 0 0 1-1-1.2l1.5-6.5A1 1 0 0 1 6 4h8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <!-- regenerate -->
+            <button class="pa-btn" title="Regenerate">
+              <svg viewBox="0 0 16 16" fill="none"><path d="M13 8A5 5 0 1 1 9 3.07" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M9 1.5v3H6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            </button>
+            <!-- more -->
+            <button class="pa-btn" title="More options">
+              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3.5" r="1.2" fill="currentColor"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="8" cy="12.5" r="1.2" fill="currentColor"/></svg>
+            </button>
+            <!-- memories used (from Figma: node 27:31241) -->
+            <button class="pa-mem-btn" title="Memories used">
+              <svg viewBox="0 0 16 16" fill="none"><ellipse cx="8" cy="8" rx="6" ry="4" stroke="currentColor" stroke-width="1.2"/><path d="M8 4v8M4 6l8 4M4 10l8-4" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompt input (from Figma: node 27:31029) -->
+      <div class="prompt-input-wrap">
+        <div class="input-text">
+          <span style="color:var(--text-deemph); font-size:16.4px;">Ask, search, or type a URL</span>
+          <span class="input-cursor"></span>
+        </div>
+        <div class="input-controls">
+          <div class="input-left-actions">
+            <!-- + attach -->
+            <button class="input-action-btn" title="Attach">
+              <svg viewBox="0 0 16 16" fill="none"><line x1="8" y1="3" x2="8" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="3" y1="8" x2="13" y2="8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+            <!-- emoji -->
+            <button class="input-action-btn" title="Emoji">
+              <svg viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><circle cx="5.5" cy="6.5" r="0.8" fill="currentColor"/><circle cx="10.5" cy="6.5" r="0.8" fill="currentColor"/><path d="M5 10c.8 1.5 5.2 1.5 6 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" fill="none"/></svg>
+            </button>
+          </div>
+          <!-- submit arrow -->
+          <div class="submit-btn">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── OVERLAY ── -->
+      <div class="overlay" id="overlay" onclick="onOverlayClick(event)">
+
+        <!-- Thumbs UP modal (Figma node 30:2186) -->
+        <div class="modal" id="modal-thumbup">
+          <div class="modal-title">Feedback</div>
+          <div class="modal-content">
+            <div>
+              <label class="field-label">Please provide details: (optional)</label>
+              <input type="text" class="text-input" placeholder="What was satisfying about this response?">
+            </div>
+            <p class="modal-disclosure">
+              Submitting this report will send the entire current conversation to Mozilla for future improvements to our models. <a href="#" onclick="return false;">Learn more</a>
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="openPreview(event)">Preview report</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitFeedback()">Submit</button>
+          </div>
+        </div>
+
+        <!-- Thumbs DOWN modal (Figma node 30:2357) -->
+        <div class="modal" id="modal-thumbdown">
+          <div class="modal-title">Feedback</div>
+          <div class="modal-content">
+            <div>
+              <label class="field-label">What type of issue do you wish to report? (optional)</label>
+              <div class="select-wrapper">
+                <select class="modal-select">
+                  <option>UI Bug</option>
+                  <option>Overactive refusal</option>
+                  <option>Not factually correct</option>
+                  <option>Did not fully follow my request</option>
+                  <option>Incomplete response</option>
+                  <option>Should have searched the web</option>
+                  <option>Memory not applied correctly</option>
+                  <option>Report content</option>
+                  <option>Not in line with Mozilla</option>
+                  <option>Other</option>
+                </select>
+                <span class="select-chevron">
+                  <svg viewBox="0 0 12 7" fill="none"><path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+              </div>
+            </div>
+            <div>
+              <label class="field-label">Please provide details: (optional)</label>
+              <input type="text" class="text-input" placeholder="What was satisfying about this response?">
+            </div>
+            <p class="modal-disclosure">
+              Submitting this report will send the entire current conversation to Mozilla for future improvements to our models. <a href="#" onclick="return false;">Learn more</a>
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-ghost" onclick="openPreview(event)">Preview report</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitFeedback()">Submit</button>
+          </div>
+        </div>
+
+      </div><!-- /overlay -->
+
+      <!-- Preview panel -->
+      <div class="preview-panel" id="previewPanel" onclick="onPreviewBackdrop(event)">
+        <div class="preview-box">
+          <div class="preview-header">
+            <h3>Report preview</h3>
+            <button class="preview-close" onclick="closePreview()">✕</button>
+          </div>
+          <div class="preview-content">
+            <div class="preview-entry">
+              <div class="preview-role">User</div>
+              etsy lamps and rugs I looked at this month
+            </div>
+            <div class="preview-div"></div>
+            <div class="preview-entry">
+              <div class="preview-role">Assistant</div>
+              Example of section heading or callout in H2. Markdown lets you easily style text for emphasis. For example, you can make words italicized or bold, or even bold and italic for extra flair…
+            </div>
+            <div class="preview-div"></div>
+            <div class="preview-note">
+              ℹ️ Client ID, IP address, and timestamps are not included. Best-effort PII sanitization applied (names, emails, phone numbers).
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast">✓ Feedback sent — thank you!</div>
+
+    </div><!-- /smart-bar -->
+  </div><!-- /main-area -->
+</div><!-- /browser -->
+
+<div class="proto-hint">Click 👍 or 👎 on the assistant response to try the feedback modals</div>
+
+<script>
+  function openModal(type) {
+    const overlay = document.getElementById('overlay');
+    document.getElementById('modal-thumbup').classList.remove('active');
+    document.getElementById('modal-thumbdown').classList.remove('active');
+    overlay.classList.add('active');
+    document.getElementById('modal-' + type).classList.add('active');
+  }
+
+  function onOverlayClick(e) {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  }
+
+  function closeModal() {
+    document.getElementById('overlay').classList.remove('active');
+    document.getElementById('modal-thumbup').classList.remove('active');
+    document.getElementById('modal-thumbdown').classList.remove('active');
+  }
+
+  function openPreview(e) {
+    if (e) e.stopPropagation();
+    document.getElementById('previewPanel').classList.add('active');
+  }
+
+  function onPreviewBackdrop(e) {
+    if (e.target === document.getElementById('previewPanel')) closePreview();
+  }
+
+  function closePreview() {
+    document.getElementById('previewPanel').classList.remove('active');
+  }
+
+  function submitFeedback() {
+    closeModal();
+    const t = document.getElementById('toast');
+    t.classList.add('active');
+    setTimeout(() => t.classList.remove('active'), 2500);
+  }
+</script>
+</body>
+</html>
